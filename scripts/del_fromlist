@@ -1,0 +1,48 @@
+#!/bin/bash
+
+if [ -z $1 ]; then
+  echo "Аddress is еmpty" 
+  exit 
+fi
+
+let "not_fount=0"
+
+n=`less /opt/zimbra/conf/sender_access_list|grep ^$1|wc -l`
+if [ $n -ne 0 ]; then
+ while IFS= read -r line
+ do
+    k=`echo $line|grep "^$1\ "|wc -l`
+    if [ $k -eq 0 ]; then
+        echo "$line" >> /tmp/sender_access_list.tmp
+    fi
+ done < /opt/zimbra/conf/sender_access_list
+ /usr/bin/cp -f /tmp/sender_access_list.tmp /opt/zimbra/conf/sender_access_list
+ rm /tmp/sender_access_list.tmp
+ echo "$1 is deleted from /opt/zimbra/conf/sender_access_list"
+ su -l zimbra -c "/opt/zimbra/postfix/sbin/postmap /opt/zimbra/conf/sender_access_list"
+else 
+
+ let "not_found=1"
+fi
+
+n=`less /opt/zimbra/conf/postfix_rbl_override|grep ^$1|wc -l`
+if [ $n -ne 0 ]; then
+ while IFS= read -r line
+ do
+    k=`echo $line|grep "^$1\ "|wc -l`
+    if [ $k -eq 0 ]; then
+        echo "$line" >> /tmp/postfix_rbl_override.tmp
+    fi
+ done < /opt/zimbra/conf/postfix_rbl_override
+ /usr/bin/cp -f /tmp/postfix_rbl_override.tmp /opt/zimbra/conf/postfix_rbl_override
+ rm /tmp/postfix_rbl_override.tmp
+ echo "$1 is deleted from /opt/zimbra/conf/postfix_rbl_override"
+ su -l zimbra -c "/opt/zimbra/postfix/sbin/postmap /opt/zimbra/conf/postfix_rbl_override"
+else
+ let "not_found=1"
+fi
+
+if [ $not_found == 1 ]; then
+  echo "<font color='red'>$1 is not found <font>"
+fi
+

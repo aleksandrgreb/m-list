@@ -1,0 +1,12 @@
+#!/bin/bash
+
+while IFS= read -r line
+ do
+    echo "email $line"
+ done < /opt/zimbra/conf/sender_access_list
+
+while IFS= read -r line
+ do
+    echo "domain $line"
+ done < /opt/zimbra/conf/postfix_rbl_override
+

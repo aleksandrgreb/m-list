@@ -1,0 +1,6 @@
+#!/bin/bash
+
+while IFS= read -r line
+ do
+    echo "$line"|grep ^whitelist_from
+ done < /opt/zimbra/conf/sa/sauser.cf

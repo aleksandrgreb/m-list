@@ -1,0 +1,52 @@
+#!/bin/bash
+
+if [ -z $1 ]; then
+  echo "<font color='red'>Аddress is еmpty</font>" 
+  exit 
+fi
+
+zzz=`echo $1|grep -E '^.+(\.{2,}).+$'|wc -l`
+if [ $zzz -ne 0 ]; then
+   echo "$1 is wrong address"
+   exit
+fi
+
+let "nn1=0"
+let "nn2=0"
+
+nn1=`echo $1|grep -E '^([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,7})$'|wc -l`
+#echo "nn1=$nn1"
+
+if [ $nn1 -ne 0 ]; then
+    n=`less /opt/zimbra/conf/sa/sauser.cf|grep -E '^[a-z]+list_from ([a-zA-Z0-9_\-\.]+)'|grep "\ $1"|wc -l`
+#    echo "n=$n"
+    if [ $n -eq 0 ]; then
+        su -l zimbra -c "echo \"whitelist_from $1\" >> /opt/zimbra/conf/sa/sauser.cf"
+        su -l zimbra -c 'zmamavisdctl restart'
+        echo "Domain $1 is added in the spamassassin white list"
+        exit
+    else
+        echo "<font color='red'>Domain $1 already exists in the spamassassin list:<br></font>"
+        exit
+    fi
+fi
+
+if [ $nn1 -eq 0 ]; then
+ nn2=`echo $1|grep -E '^([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,5})$'|wc -l`
+# echo "nn2=$nn2"
+fi 
+
+if [ $nn2 -ne 0 ] ; then
+    n=`less /opt/zimbra/conf/sa/sauser.cf|grep -E '^[a-z]+list_from ([a-zA-Z0-9_\-\.]+)@([a-zA-Z0-9_\-\.]+)\.([a-zA-Z]{2,5})$'|grep $1|wc -l`
+#    echo "n=$n"
+    if [ $n -eq 0 ]; then
+        su -l zimbra -c "echo \"whitelist_from $1\" >> /opt/zimbra/conf/sa/sauser.cf"
+        su -l zimbra -c 'zmamavisdctl restart'
+        echo "Email address $1 is added in the spamassassin white list"
+        exit
+    else
+        echo "<font color='red'>Email address $1 already exists in the spamassassin list:<br></font>"
+        exit
+    fi
+fi
+
